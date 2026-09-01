@@ -29,6 +29,7 @@ dist/
 .vscode/
 .DS_Store
 
-# Local experiment outputs
+# Local experiment outputs / private data
 outputs/
 artifacts/
+data/

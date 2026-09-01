@@ -40,6 +40,22 @@ python examples/smoke_synthetic.py
 This fits scalers on synthetic data, trains a tiny TCDR, writes a bundle under
 `examples/synthetic_bundle/`, reloads it, and runs `predict`.
 
+## Train from scratch on local industrial data
+
+Keep the historian file **outside git** (or under ignored `data/`). Example:
+
+```bash
+python examples/train_from_h5.py \
+  --data /path/to/sulfatos_dados_concatenados_formatados_2021.h5 \
+  --target 1251_FIT_801C_2 \
+  --bundle-dir artifacts/bundle_target_a \
+  --cpu
+```
+
+This runs blocked chronological split with adaptive head-skip, train-only
+feature screening, mask-weighted TCDR training, bundle export, and held-out
+outage-mode metrics via `VirtualSensor.predict`.
+
 ## Ecosystem integration
 
 ```python

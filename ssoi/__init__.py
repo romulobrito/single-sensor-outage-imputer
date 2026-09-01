@@ -9,6 +9,7 @@ from __future__ import annotations
 from ssoi.bundle import ImputerBundle, load_bundle, save_bundle
 from ssoi.model import TargetConditionalDenoisingRegressor
 from ssoi.predict import VirtualSensor
+from ssoi.train import train_from_dataframe, train_from_h5
 
 __all__ = [
     "ImputerBundle",
@@ -16,6 +17,8 @@ __all__ = [
     "VirtualSensor",
     "load_bundle",
     "save_bundle",
+    "train_from_dataframe",
+    "train_from_h5",
 ]
 
 __version__ = "0.1.0"
