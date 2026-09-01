@@ -1,0 +1,10 @@
+{
+  "dropout": 0.1,
+  "h1": 64,
+  "h2": 32,
+  "in_dim": 6,
+  "latent_dim": 8,
+  "model_type": "tcdr",
+  "n_features": 4,
+  "parameter_count": 3321
+}

@@ -1,0 +1,13 @@
+{
+  "example": "smoke_synthetic",
+  "inference_channels": {
+    "m_t": 1.0,
+    "t_tilde": 0.0
+  },
+  "inference_mode": "missing_target",
+  "n_features": 4,
+  "package": "single-sensor-outage-imputer",
+  "schema_version": "1.0",
+  "seed": 42,
+  "target_name": "Target_Synthetic"
+}

@@ -1,0 +1,34 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenvs
+.venv/
+venv/
+ENV/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Models / data (keep example configs; ignore heavy dumps)
+*.pth
+*.h5
+*.hdf5
+*.csv
+*.parquet
+# Allow the synthetic smoke bundle (including tiny weights)
+!examples/synthetic_bundle/
+!examples/synthetic_bundle/**
+
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Local experiment outputs
+outputs/
+artifacts/
