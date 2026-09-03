@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -60,6 +60,71 @@ def load_table(data_path: PathLike) -> pd.DataFrame:
     raise ValueError(f"Unsupported data format: {path.suffix}")
 
 
+def coerce_numeric_series(series: pd.Series) -> pd.Series:
+    """
+    Coerce a column to float, mapping invalid tokens and infinities to NaN.
+
+    Parameters
+    ----------
+    series :
+        Raw column, possibly object/string typed.
+
+    Returns
+    -------
+    pd.Series
+        Float series aligned to the input index.
+    """
+    numeric = pd.to_numeric(series, errors="coerce")
+    return numeric.replace([np.inf, -np.inf], np.nan)
+
+
+def coerce_numeric_frame(
+    df: pd.DataFrame,
+    columns: Optional[Sequence[str]] = None,
+) -> pd.DataFrame:
+    """
+    Return a copy with selected columns coerced to numeric.
+
+    Parameters
+    ----------
+    df :
+        Input table. The caller DataFrame is not mutated.
+    columns :
+        Columns to coerce. When None, every column is coerced.
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy with coerced columns.
+    """
+    out = df.copy()
+    cols = list(out.columns) if columns is None else list(columns)
+    for col in cols:
+        if col not in out.columns:
+            raise KeyError(f"Column '{col}' not in DataFrame")
+        out[col] = coerce_numeric_series(out[col])
+    return out
+
+
+def _outage_channels(yb: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Return production outage channels matching VirtualSensor inference.
+
+    Parameters
+    ----------
+    yb :
+        Target batch with shape (batch, 1).
+
+    Returns
+    -------
+    tuple of torch.Tensor
+        ``(t_tilde, m_t)`` with zeros and ones, same shape as ``yb``.
+    """
+    m_t = torch.ones_like(yb)
+    t_tilde = torch.zeros_like(yb)
+    return t_tilde, m_t
+
+
 def blocked_split_with_skip(
     df: pd.DataFrame,
     target: str,
@@ -72,14 +137,23 @@ def blocked_split_with_skip(
     max_skip_head_frac: float = 0.95,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """
-    Contiguous blocked split using row order as time, with optional head-skip.
+    Contiguous blocked split using row position as time, with optional head-skip.
+
+    Coverage counts only finite numeric target values. Invalid strings and
+    infinities are treated as missing. Returned arrays are integer positions
+    suitable for ``DataFrame.iloc``, not index labels.
+
+    When ``auto_skip_until_coverage`` is True and no window meets both
+    ``min_target_coverage`` and ``min_target_count``, a ``ValueError`` is
+    raised with the best coverage and count observed.
     """
     if target not in df.columns:
         raise KeyError(f"Target '{target}' not in columns")
-    idx = df.index.to_numpy()
-    n_total = int(len(idx))
+    n_total = int(len(df))
     if n_total < 3:
         raise ValueError("Dataset too small for blocked split")
+    positions = np.arange(n_total, dtype=np.int64)
+    present = coerce_numeric_series(df[target]).notna().to_numpy()
 
     def compute_from(arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         n = int(len(arr))
@@ -88,34 +162,51 @@ def blocked_split_with_skip(
         n_val = max(1, int(np.ceil(n_rem * float(val_size))))
         if (n_test + n_val) >= n:
             raise ValueError("Blocked split sizes too large for dataset length")
-        test_idx = arr[-n_test:]
-        val_idx = arr[-(n_test + n_val):-n_test]
-        train_idx = arr[: (n - n_test - n_val)]
-        return train_idx, val_idx, test_idx
+        test_pos = arr[-n_test:]
+        val_pos = arr[-(n_test + n_val):-n_test]
+        train_pos = arr[: (n - n_test - n_val)]
+        return train_pos, val_pos, test_pos
 
-    present_mask = df[target].notna()
     start_frac = min(max(0.0, float(skip_head_frac)), 0.95)
+    min_cov = float(min_target_coverage)
+    min_count = int(min_target_count)
 
     if auto_skip_until_coverage:
         upper = float(min(max(float(max_skip_head_frac), start_frac), 0.95))
+        best_coverage = -1.0
+        best_present = -1
+        best_frac = float(start_frac)
         for frac in np.linspace(start_frac, upper, num=51):
             start_i = int(np.floor(n_total * float(frac)))
-            arr = idx[start_i:]
+            arr = positions[start_i:]
             if len(arr) < 10:
                 continue
             try:
-                train_idx, val_idx, test_idx = compute_from(arr)
+                train_pos, val_pos, test_pos = compute_from(arr)
             except ValueError:
                 continue
-            total_train = int(len(train_idx))
-            present_train = int(present_mask.loc[train_idx].sum())
+            total_train = int(len(train_pos))
+            present_train = int(present[train_pos].sum())
             coverage = float(present_train) / float(total_train) if total_train else 0.0
-            if coverage >= float(min_target_coverage) and present_train >= int(min_target_count):
-                return train_idx, val_idx, test_idx, float(frac)
+            if coverage > best_coverage or (
+                coverage == best_coverage and present_train > best_present
+            ):
+                best_coverage = coverage
+                best_present = present_train
+                best_frac = float(frac)
+            if coverage >= min_cov and present_train >= min_count:
+                return train_pos, val_pos, test_pos, float(frac)
+        raise ValueError(
+            "Adaptive head-skip found no window meeting "
+            f"min_target_coverage={min_cov} and min_target_count={min_count}. "
+            f"Best coverage={best_coverage:.4f}, "
+            f"best observed count={best_present}, "
+            f"max skip_frac tested={best_frac:.4f}."
+        )
 
     start_i = int(np.floor(n_total * start_frac))
-    train_idx, val_idx, test_idx = compute_from(idx[start_i:])
-    return train_idx, val_idx, test_idx, float(start_frac)
+    train_pos, val_pos, test_pos = compute_from(positions[start_i:])
+    return train_pos, val_pos, test_pos, float(start_frac)
 
 
 def select_features_train_only(
@@ -133,12 +224,12 @@ def select_features_train_only(
     """
     if target not in df_train.columns:
         raise KeyError(f"Target '{target}' not in training columns")
-    y = pd.to_numeric(df_train[target], errors="coerce")
+    y = coerce_numeric_series(df_train[target])
     candidates: List[Tuple[str, float, float, float]] = []
     for col in df_train.columns:
         if col == target:
             continue
-        series = pd.to_numeric(df_train[col], errors="coerce")
+        series = coerce_numeric_series(df_train[col])
         if series.notna().sum() < 10:
             continue
         missing_pct = float(series.isna().mean() * 100.0)
@@ -182,7 +273,13 @@ def _train_model(
     masked_weight: float,
     device: str,
 ) -> Dict[str, List[float]]:
-    """Mask-weighted MSE training with early stopping on validation loss."""
+    """
+    Mask-weighted MSE training with early stopping on outage validation loss.
+
+    Training still samples random target masks. Checkpoint selection, the
+    plateau scheduler, and ``history["val_loss"]`` use production channels
+    ``m_t=1`` and ``t_tilde=0``.
+    """
     train_loader = DataLoader(
         TensorDataset(
             torch.from_numpy(x_train.astype(np.float32)),
@@ -239,8 +336,7 @@ def _train_model(
             for xb, yb in val_loader:
                 xb = xb.to(device)
                 yb = yb.to(device)
-                m_t = (torch.rand_like(yb) < float(p_mask)).float()
-                t_tilde = (1.0 - m_t) * yb
+                t_tilde, m_t = _outage_channels(yb)
                 y_hat = model(xb, t_tilde, m_t)
                 per = criterion(y_hat, yb)
                 loss = ((1.0 + float(masked_weight) * m_t) * per).mean()
@@ -261,7 +357,7 @@ def _train_model(
         if (epoch + 1) % 10 == 0 or epoch == 0:
             print(
                 f"Epoch {epoch + 1:3d}/{epochs} | "
-                f"train={train_loss:.6f} | val={val_loss:.6f}"
+                f"train={train_loss:.6f} | val_outage={val_loss:.6f}"
             )
         if stall >= int(patience):
             print(f"Early stopping at epoch {epoch + 1}")
@@ -304,9 +400,13 @@ def train_from_dataframe(
     set_seed(seed)
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
+    if target not in df.columns:
+        raise KeyError(f"Target '{target}' not in columns")
 
-    train_idx, val_idx, test_idx, skip_frac = blocked_split_with_skip(
-        df,
+    # Numeric cleanup before split, coverage, and scaling.
+    work = coerce_numeric_frame(df, list(df.columns))
+    train_pos, val_pos, test_pos, skip_frac = blocked_split_with_skip(
+        work,
         target=target,
         test_size=test_size,
         val_size=val_size,
@@ -318,7 +418,7 @@ def train_from_dataframe(
     print(f"Head skip fraction used: {skip_frac:.3f}")
 
     features = select_features_train_only(
-        df.loc[train_idx],
+        work.iloc[train_pos],
         target=target,
         min_correlation=min_correlation,
         max_missing_pct=max_missing_pct,
@@ -327,16 +427,21 @@ def train_from_dataframe(
     )
     print(f"Selected {len(features)} features: {features}")
 
-    df_obs = df[df[target].notna()].copy()
-    train_i = [i for i in train_idx if i in df_obs.index]
-    val_i = [i for i in val_idx if i in df_obs.index]
-    test_i = [i for i in test_idx if i in df_obs.index]
+    observed = work[target].notna().to_numpy()
+
+    def keep_observed(pos: np.ndarray) -> np.ndarray:
+        """Keep split positions whose target is finite after numeric coerce."""
+        return np.asarray(pos[observed[pos]], dtype=np.int64)
+
+    train_i = keep_observed(train_pos)
+    val_i = keep_observed(val_pos)
+    test_i = keep_observed(test_pos)
     if min(len(train_i), len(val_i), len(test_i)) == 0:
         raise ValueError("Empty train/val/test after filtering to observed targets")
 
-    x_all = df_obs[features].apply(pd.to_numeric, errors="coerce")
-    y_all = df_obs[[target]].apply(pd.to_numeric, errors="coerce")
-    means_series = x_all.loc[train_i].mean()
+    x_all = work[features]
+    y_all = work[[target]]
+    means_series = x_all.iloc[train_i].mean()
     if means_series.isna().any():
         bad = means_series[means_series.isna()].index.tolist()
         raise ValueError(f"Cannot compute train means for: {bad}")
@@ -345,12 +450,12 @@ def train_from_dataframe(
     def impute(part: pd.DataFrame) -> np.ndarray:
         return part.fillna(means_series).fillna(0.0).to_numpy(dtype=np.float32)
 
-    x_train_raw = impute(x_all.loc[train_i])
-    x_val_raw = impute(x_all.loc[val_i])
-    x_test_raw = impute(x_all.loc[test_i])
-    y_train_raw = y_all.loc[train_i].to_numpy(dtype=np.float32)
-    y_val_raw = y_all.loc[val_i].to_numpy(dtype=np.float32)
-    y_test_raw = y_all.loc[test_i].to_numpy(dtype=np.float32)
+    x_train_raw = impute(x_all.iloc[train_i])
+    x_val_raw = impute(x_all.iloc[val_i])
+    x_test_raw = impute(x_all.iloc[test_i])
+    y_train_raw = y_all.iloc[train_i].to_numpy(dtype=np.float32)
+    y_val_raw = y_all.iloc[val_i].to_numpy(dtype=np.float32)
+    y_test_raw = y_all.iloc[test_i].to_numpy(dtype=np.float32)
 
     scaler_x = StandardScaler()
     scaler_y = StandardScaler()
