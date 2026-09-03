@@ -48,13 +48,41 @@ def set_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(int(seed))
 
 
-def load_table(data_path: PathLike) -> pd.DataFrame:
-    """Load HDF5 or CSV into a DataFrame."""
+def load_table(data_path: PathLike, hdf_key: Optional[str] = None) -> pd.DataFrame:
+    """
+    Load HDF5 or CSV into a DataFrame.
+
+    Parameters
+    ----------
+    data_path :
+        Path to a ``.csv``, ``.h5``, or ``.hdf5`` file.
+    hdf_key :
+        Optional HDF5 table/group name when the file contains more than one
+        dataset. Ignored for CSV.
+
+    Returns
+    -------
+    pd.DataFrame
+        Loaded table.
+
+    Raises
+    ------
+    ImportError
+        If HDF5 is requested and PyTables is not installed.
+    """
     path = Path(data_path)
     if not path.exists():
         raise FileNotFoundError(f"Dataset not found: {path}")
     if path.suffix.lower() in {".h5", ".hdf5"}:
-        return pd.read_hdf(path)
+        try:
+            if hdf_key is None:
+                return pd.read_hdf(path)
+            return pd.read_hdf(path, key=hdf_key)
+        except ImportError as exc:
+            raise ImportError(
+                "HDF5 loading requires PyTables. Install with: "
+                'pip install -e ".[hdf5]"'
+            ) from exc
     if path.suffix.lower() == ".csv":
         return pd.read_csv(path)
     raise ValueError(f"Unsupported data format: {path.suffix}")
@@ -557,9 +585,18 @@ def train_from_h5(
     data_path: PathLike,
     target: str,
     bundle_dir: PathLike,
+    hdf_key: Optional[str] = None,
     **kwargs: Any,
 ) -> TrainResult:
-    """Load table from disk and run train_from_dataframe."""
-    df = load_table(data_path)
+    """
+    Load a table from disk and run train_from_dataframe.
+
+    Parameters
+    ----------
+    hdf_key :
+        Optional HDF5 table/group name. Must not be forwarded to
+        ``train_from_dataframe``.
+    """
+    df = load_table(data_path, hdf_key=hdf_key)
     print(f"Loaded {data_path}: shape={df.shape}")
     return train_from_dataframe(df, target=target, bundle_dir=bundle_dir, **kwargs)

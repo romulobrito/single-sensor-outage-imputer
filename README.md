@@ -28,7 +28,13 @@ cd single-sensor-outage-imputer
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
+pip install -e ".[dev]"
+```
+
+HDF5 training needs PyTables:
+
+```bash
+pip install -e ".[hdf5,dev]"
 ```
 
 ## Quick start (synthetic smoke)
@@ -49,8 +55,11 @@ python examples/train_from_h5.py \
   --data /path/to/sulfatos_dados_concatenados_formatados_2021.h5 \
   --target 1251_FIT_801C_2 \
   --bundle-dir artifacts/bundle_target_a \
-  --cpu
+  --hdf-key optional_table_name
 ```
+
+Omit `--cpu` to use CUDA when available. `--hdf-key` is only required when the
+HDF5 file contains more than one table.
 
 This runs blocked chronological split with adaptive head-skip, train-only
 feature screening, mask-weighted TCDR training, bundle export, and held-out
