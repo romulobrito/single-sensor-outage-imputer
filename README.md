@@ -17,8 +17,15 @@ At deployment, outage mode is forced as:
 t_hat = f_theta(x, 0, 1)
 ```
 
-This repository is the **integration/runtime** surface. The research manuscript,
-controlled MCAR/MAR/MNAR validation, and baselines live in a separate lab repo.
+This repository is the **offline training and inference** surface (`VirtualSensor`,
+bundle I/O). The **host** for outage recovery is BibMon: it consumes SSOI as an
+optional extra. Canonical integration spec:
+
+- `../BibMon/doc/SSOI_BIBMON.md` (workspace) or BibMon `doc/SSOI_BIBMON.md`
+- Roadmap in this repo: `doc/PLANO_INTEGRACAO_BIBMON.md`
+
+The research manuscript, controlled MCAR/MAR/MNAR validation, and baselines live
+in a separate lab repo.
 
 ## Install
 
