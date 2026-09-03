@@ -95,6 +95,7 @@ A bundle directory must contain:
 - **Output:** `t_hat` in engineering units (inverse-scaled).
 - **Missing auxiliaries:** filled with train means, then `0.0` as fallback.
 - **Target channel:** always treated as missing at inference (`m_t=1`).
+- **Batching:** `predict(..., batch_size=1024)` slices the forward pass (override as needed).
 
 ## Not in scope here
 

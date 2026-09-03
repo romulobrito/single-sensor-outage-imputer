@@ -78,6 +78,7 @@ class VirtualSensor:
         x: ArrayLike,
         *,
         return_scaled: bool = False,
+        batch_size: int = 1024,
     ) -> np.ndarray:
         """
         Predict target values in outage mode (m_t=1, t_tilde=0).
@@ -85,21 +86,35 @@ class VirtualSensor:
         Args:
             x: DataFrame with feature columns, or ndarray (n, n_features)
             return_scaled: if True, return predictions in scaled target space
+            batch_size: max rows per forward pass (must be >= 1)
 
         Returns:
             1D numpy array of predictions (engineering units by default)
         """
+        if int(batch_size) < 1:
+            raise ValueError(f"batch_size must be >= 1, got {batch_size}")
         frame = self._frame_from_input(x)
         x_raw = self._impute_auxiliaries(frame)
         x_scaled = self.bundle.scaler_x.transform(x_raw).astype(np.float32)
 
-        n = x_scaled.shape[0]
-        x_t = torch.from_numpy(x_scaled).to(self.device)
-        t_zero = torch.zeros((n, 1), dtype=torch.float32, device=self.device)
-        m_one = torch.ones((n, 1), dtype=torch.float32, device=self.device)
-
+        n = int(x_scaled.shape[0])
+        chunks: List[np.ndarray] = []
+        step = int(batch_size)
+        self.bundle.model.eval()
         with torch.no_grad():
-            y_hat_scaled = self.bundle.model(x_t, t_zero, m_one).cpu().numpy()
+            for start in range(0, n, step):
+                stop = min(start + step, n)
+                x_t = torch.from_numpy(x_scaled[start:stop]).to(self.device)
+                rows = int(x_t.shape[0])
+                t_zero = torch.zeros((rows, 1), dtype=torch.float32, device=self.device)
+                m_one = torch.ones((rows, 1), dtype=torch.float32, device=self.device)
+                y_hat_scaled = self.bundle.model(x_t, t_zero, m_one).cpu().numpy()
+                chunks.append(y_hat_scaled.reshape(-1))
+
+        if chunks:
+            y_hat_scaled = np.concatenate(chunks, axis=0)
+        else:
+            y_hat_scaled = np.empty((0,), dtype=np.float32)
 
         if return_scaled:
             return y_hat_scaled.reshape(-1)
