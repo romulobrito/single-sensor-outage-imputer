@@ -188,8 +188,16 @@ def load_bundle(bundle_dir: PathLike, device: str = "cpu") -> ImputerBundle:
         latent_dim=latent_dim,
         dropout=dropout,
     )
-    state = torch.load(root / "best_model.pth", map_location=device)
-    model.load_state_dict(state)
+    weights_path = root / "best_model.pth"
+    try:
+        state = torch.load(weights_path, map_location=device)
+        model.load_state_dict(state)
+    except FileNotFoundError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(
+            f"Failed to load model weights from {weights_path}: {exc}"
+        ) from exc
     model.to(device)
     model.eval()
 
@@ -199,6 +207,11 @@ def load_bundle(bundle_dir: PathLike, device: str = "cpu") -> ImputerBundle:
         # Accept RobustScaler or other sklearn transformers with transform()
         if not hasattr(scaler_x, "transform"):
             raise TypeError("scaler_X must expose .transform()")
+    n_in = getattr(scaler_x, "n_features_in_", None)
+    if n_in is not None and int(n_in) != len(features):
+        raise ValueError(
+            f"scaler_X n_features_in_={int(n_in)} != len(features)={len(features)}"
+        )
     if not hasattr(scaler_y, "inverse_transform"):
         raise TypeError("scaler_y must expose .inverse_transform()")
 

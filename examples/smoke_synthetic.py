@@ -24,6 +24,7 @@ from ssoi import (  # noqa: E402
     VirtualSensor,
     save_bundle,
 )
+from ssoi.train import _drop_last_for_batchnorm  # noqa: E402
 
 
 def _make_synthetic(
@@ -53,7 +54,12 @@ def _train_short(
         torch.from_numpy(x_scaled.astype(np.float32)),
         torch.from_numpy(y_scaled.reshape(-1, 1).astype(np.float32)),
     )
-    loader = DataLoader(ds, batch_size=64, shuffle=True)
+    loader = DataLoader(
+        ds,
+        batch_size=64,
+        shuffle=True,
+        drop_last=_drop_last_for_batchnorm(len(ds), 64),
+    )
     opt = torch.optim.Adam(model.parameters(), lr=1e-3)
     loss_fn = nn.MSELoss(reduction="none")
     model.to(device)

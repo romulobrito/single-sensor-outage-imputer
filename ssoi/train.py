@@ -286,6 +286,43 @@ def select_features_train_only(
     return selected
 
 
+def _drop_last_for_batchnorm(n_samples: int, batch_size: int) -> bool:
+    """
+    Return True when the last training batch would have size 1.
+
+    BatchNorm1d in train mode requires batch size != 1. A remainder larger
+    than 1 is kept.
+
+    Parameters
+    ----------
+    n_samples :
+        Number of training rows.
+    batch_size :
+        DataLoader batch size.
+
+    Returns
+    -------
+    bool
+        Whether ``DataLoader(..., drop_last=True)`` is required.
+
+    Raises
+    ------
+    ValueError
+        If ``n_samples < 2`` or ``batch_size < 1``.
+    """
+    n = int(n_samples)
+    bs = int(batch_size)
+    if bs < 1:
+        raise ValueError(f"batch_size must be >= 1, got {bs}")
+    if n < 2:
+        raise ValueError(
+            f"Need at least 2 training samples for BatchNorm1d, got {n}"
+        )
+    remainder = n % bs
+    last_size = remainder if remainder != 0 else min(n, bs)
+    return last_size == 1
+
+
 def _train_model(
     model: TargetConditionalDenoisingRegressor,
     x_train: np.ndarray,
@@ -315,6 +352,7 @@ def _train_model(
         ),
         batch_size=batch_size,
         shuffle=True,
+        drop_last=_drop_last_for_batchnorm(int(x_train.shape[0]), int(batch_size)),
     )
     val_loader = DataLoader(
         TensorDataset(
