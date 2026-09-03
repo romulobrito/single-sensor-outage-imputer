@@ -1,0 +1,15 @@
+---
+description: SSOI remains a library consumed by BibMon; no inverted dependency
+alwaysApply: true
+---
+
+# SSOI versus BibMon
+
+This package does not import BibMon. Training, scalers, and `VirtualSensor`
+stay here. Outage detection, PreProcess, SPE, alarms, and plant policy stay
+in BibMon.
+
+Do not implement SSOI as `ModeloGenerico`. Do not vendor BibMon source.
+
+Send engineering-unit auxiliaries into `VirtualSensor`; the bundle owns TCDR
+scaling. Canonical spec: BibMon `doc/SSOI_BIBMON.md`.

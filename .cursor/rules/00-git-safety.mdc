@@ -1,0 +1,16 @@
+---
+description: Git safety and publication boundary for the SSOI repository
+alwaysApply: true
+---
+
+# Git authorization
+
+You may inspect the repo, edit local files, create a local branch, and run tests.
+
+Do not execute commit, push, merge, rebase, cherry-pick, GitHub PR mutations,
+tags, or releases without explicit user authorization for that operation.
+
+Never force-push or run `git reset --hard` / `git clean -fd` unless the user
+explicitly requests it.
+
+Propose Conventional Commit messages and exact commands; the user runs them.

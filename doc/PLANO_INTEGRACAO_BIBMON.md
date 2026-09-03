@@ -1,15 +1,25 @@
 # Plano de Integracao SSOI na BibMon
 
-Documento de planejamento para integrar o pacote **single-sensor-outage-imputer**
-(SSOI / TCDR) ao ecossistema **BibMon** (Grupo EngePol).
+Documento de planejamento (roadmap) para integrar o pacote
+**single-sensor-outage-imputer** (SSOI / TCDR) ao ecossistema **BibMon**.
+
+A **spec canonica** mora no repositorio hospedeiro:
+
+- BibMon `doc/SSOI_BIBMON.md`
+- BibMon `specs/001-ssoi-outage-integration/`
+- BibMon `doc/adr/` e `doc/runbooks/`
+
+Este arquivo permanece como narrativa de fases e cronograma. Em conflito, a spec
+e as ADRs da BibMon prevalecem.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.5                                        |
+| Versao do plano  | 1.6                                        |
 | Data             | 2026-09-03                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
-| Status           | Rascunho para revisao do time              |
+| Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
+| Status           | Rascunho alinhado a spec proposta          |
 
 ---
 
