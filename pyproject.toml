@@ -16,6 +16,10 @@ dependencies = [
   "joblib>=1.0.0",
 ]
 
+[project.optional-dependencies]
+hdf5 = ["tables>=3.8"]
+dev = ["pytest>=7.0"]
+
 [project.urls]
 Repository = "https://github.com/romulobrito/single-sensor-outage-imputer"
 

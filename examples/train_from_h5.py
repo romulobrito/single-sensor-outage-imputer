@@ -56,6 +56,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--min-target-coverage", type=float, default=0.2)
     p.add_argument("--min-target-count", type=int, default=10000)
     p.add_argument("--max-skip-head-frac", type=float, default=0.95)
+    p.add_argument(
+        "--hdf-key",
+        default=None,
+        help="HDF5 table/group name when the file contains more than one table",
+    )
     p.add_argument("--cpu", action="store_true", help="Force CPU even if CUDA exists")
     return p
 
@@ -86,6 +91,7 @@ def main(argv: list[str] | None = None) -> int:
         min_target_coverage=args.min_target_coverage,
         min_target_count=args.min_target_count,
         max_skip_head_frac=args.max_skip_head_frac,
+        hdf_key=args.hdf_key,
         device=device,
     )
     summary = {
