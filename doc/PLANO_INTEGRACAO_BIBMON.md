@@ -10,16 +10,19 @@ A **spec canonica** mora no repositorio hospedeiro:
 - BibMon `doc/adr/` e `doc/runbooks/`
 
 Este arquivo permanece como narrativa de fases e cronograma. Em conflito, a spec
-e as ADRs da BibMon prevalecem.
+e as ADRs da BibMon prevalecem. O **andamento vivo** (fluxogramas, rascunhos,
+decisoes ja tomadas no codigo) esta em BibMon `doc/SSOI_PLANO_VIVO.md` e deve
+ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.6                                        |
-| Data             | 2026-09-03                                 |
+| Versao do plano  | 1.10                                       |
+| Data             | 2026-09-08                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
-| Status           | Rascunho alinhado a spec proposta          |
+| Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
+| Status           | Fase 1-3 minima no codigo (wrapper, detector, fio, reliability por tag) |
 
 ---
 
@@ -286,24 +289,28 @@ faltarem `scaler_X.joblib`, `scaler_y.joblib` ou `best_model.pth`.
 
 ### Fase 1 -- Wrapper minimo `SSOIImputer`
 
+**Status:** `[x]` no codigo BibMon (2026-09-03). Branch
+`feat/ssoi-imputer-wrapper` no remoto. Sem merge em `main`.
+Detalhe: BibMon `doc/SSOI_PLANO_VIVO.md`.
+
 **Objetivo:** API publica e opcional na BibMon no padrao
 `ImputeGAPImputer`, sem tornar SSOI obrigatorio para o core.
 
-**Repo:** BibMon (branch `feature/ssoi-imputer-minimal`)
+**Repo:** BibMon (branch `feat/ssoi-imputer-wrapper`)
 
 **Duracao estimada:** 1 semana
 
 | ID   | Subetapa                                      | Entregavel                          | Criterio de aceite                    |
 |------|-----------------------------------------------|-------------------------------------|---------------------------------------|
-| 1.1  | Criar `bibmon/_ssoi_imputer.py`               | classe `SSOIImputer`                | delega para `VirtualSensor`           |
-| 1.2  | Metodo `predict_outage(df_aux)`               | ndarray/Series                      | colunas = features do bundle          |
-| 1.3  | Metodo `fill_target(df, outage_mask)`        | DataFrame                           | preenche so linhas com mask=True      |
-| 1.4  | Propriedades `target_name`, `features`, `info`| API espelhando VirtualSensor        | testes unitarios                      |
-| 1.5  | `setup.py` -> `extras_require['ssoi']`        | metadata do extra                   | dependencia SSOI declarada            |
-| 1.6  | Export com import tardio em `bibmon/__init__.py` | API opcional                      | `import bibmon` funciona sem SSOI     |
-| 1.7  | `test/test_ssoi_imputer.py`                   | testes com mock de `VirtualSensor`  | CI leve passa sem torch/SSOI          |
-| 1.8  | Factory de bundle sintetico em `test/fixtures/` | bundle gerado em `tmp_path`        | CI full valida carga e predicao reais |
-| 1.9  | `doc/SSOI_BIBMON.md` (copia ou link deste plano) | doc usuario                      | revisado pelo time                    |
+| 1.1  | Criar `bibmon/_ssoi_imputer.py`               | classe `SSOIImputer`                | `[x]` delega para `VirtualSensor`     |
+| 1.2  | Metodo `predict_outage(df_aux)`               | Series                              | `[x]` colunas = features do bundle    |
+| 1.3  | Metodo `fill_target(df, target, outage_mask)` | DataFrame                           | `[x]` preenche so linhas com mask     |
+| 1.4  | Propriedades `target_name`, `features`        | API publica                         | `[x]` testes unitarios                |
+| 1.5  | `setup.py` -> `extras_require['ssoi']`        | metadata do extra                   | `[x]` dependencia declarada           |
+| 1.6  | Export em `bibmon/__init__.py` (import tardio do SSOI) | API opcional               | `[x]` `import bibmon` sem SSOI        |
+| 1.7  | `test/test_ssoi_imputer.py`                   | testes com mock                     | `[x]` 44 testes                       |
+| 1.8  | Factory de bundle sintetico em `test/fixtures/` | bundle gerado em `tmp_path`        | `[ ]` CI full                         |
+| 1.9  | `doc/SSOI_WRAPPER.md` + plano vivo            | doc usuario                         | `[x]` 2026-09-04                      |
 
 **API alvo (referencia):**
 
@@ -312,7 +319,7 @@ import bibmon
 
 imputer = bibmon.SSOIImputer(bundle_dir="path/to/bundle")
 y_hat = imputer.predict_outage(df_aux)
-df_out = imputer.fill_target(df_planta, outage_mask=mask)
+df_out = imputer.fill_target(df_planta, imputer.target_name, outage_mask=mask)
 ```
 
 **Dependencias:** Fase 0 concluida. Na Fase 1, o workspace pode instalar SSOI
@@ -325,6 +332,10 @@ vira criterio de release depois da definicao do canal na Fase 5.
 
 ### Fase 2 -- Avaliacao offline (sulfatos)
 
+**Status:** `[~]` script e relatorio de metricas em 2026-09-04
+(`avaliacao_ssoi_sulfatos.py`, `doc/SSOI_ENSAIO_SULFATOS.md`). Limiar de
+promocao e ambiente limpo ainda nao. Nao versionar H5 nem bundle industrial.
+
 **Objetivo:** validar, pela API publica da BibMon, um bundle treinado no SSOI,
 com benchmark reproduzivel que espelha `imputacao_sulfatos_relatorio.py`.
 
@@ -335,8 +346,8 @@ com benchmark reproduzivel que espelha `imputacao_sulfatos_relatorio.py`.
 | ID   | Subetapa                                      | Entregavel                          | Criterio de aceite                    |
 |------|-----------------------------------------------|-------------------------------------|---------------------------------------|
 | 2.0  | Receber candidato treinado e versionado no SSOI | bundle + metricas de treino       | contrato completo e origem registrada |
-| 2.1  | `scripts/avaliacao_ssoi_sulfatos.py`          | script CLI                          | roda com `--bundle-dir`               |
-| 2.2  | Simular outage na coluna alvo (mascara)       | hold-out sobre alvo observado       | RMSE/MAE/R2 reportados                |
+| 2.1  | `scripts/avaliacao_ssoi_sulfatos.py`          | script CLI                          | Feito: `--bundle` / `--bundle-dir` + env |
+| 2.2  | Simular outage na coluna alvo (mascara)       | hold-out sobre alvo observado       | Feito: MAE/RMSE/R2 no relatorio       |
 | 2.3  | Saida JSON + Markdown                         | `doc/RELATORIO_SSOI_SULFATOS.*`     | formato analogo ao ImputeGAP          |
 | 2.4  | Comparacao opcional com 1-2 metodos ImputeGAP | tabela comparativa                  | documentada no relatorio              |
 | 2.5  | Variaveis de ambiente (amostra, skip)         | compativel com padrao sulfatos      | `SULFATOS_MAX_ROWS` etc.              |
@@ -365,12 +376,12 @@ o modelo e seu impacto downstream sem substituir a medicao saudavel.
 
 | ID   | Subetapa                                      | Entregavel                          | Criterio de aceite                    |
 |------|-----------------------------------------------|-------------------------------------|---------------------------------------|
-| 3.1  | `bibmon/_outage_detector.py`                  | `OutageConfig` + `OutageDetector`   | NaN/stale + histerese testados        |
-| 3.2  | `bibmon/_ssoi_registry.py`                    | `SSOIRegistry`                      | tag resolve bundle/imputer habilitado |
+| 3.1  | `bibmon/_outage_detector.py`                  | `OutageConfig` + `OutageDetector`   | Feito na branch `feat/ssoi-imputer-wrapper` (NaN/stale + histerese) |
+| 3.2  | `bibmon/_ssoi_registry.py`                    | `SSOIRegistry`                      | Feito na branch `feat/ssoi-imputer-wrapper` |
 | 3.3  | Coluna opcional `{target}_SOURCE`             | rastreabilidade                     | SSOI vs MEDIDO                        |
 | 3.4  | Atualizar `monitoramento_processo_real.ipynb` | notebook                            | cenario outage demonstrado            |
 | 3.5  | Validar SPE/alarmes com e sem outage          | nota tecnica curta                  | alarmes nao disparam por NaN no alvo |
-| 3.6  | `bibmon/_outage_recovery.py`                  | `apply_outage_imputation()`         | multiplos alvos via registry          |
+| 3.6  | `bibmon/_outage_recovery.py`                  | `apply_outage_imputation()`         | Feito: testes unitarios sem I/O industrial |
 | 3.7  | Separar escrita e entrada do monitoramento    | `MonitorInputPolicy`                | shadow nao altera DCS por acidente    |
 | 3.8  | Modo `shadow_mode` (imputa mas nao publica)   | flag em config                      | util para staging                     |
 | 3.9  | Testes batch, amostra e modos de inferencia   | testes unitarios/integracao         | indices, masks e fontes preservados   |
@@ -1159,14 +1170,12 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 
 ## 12. Proximos passos imediatos
 
-1. Revisar este plano com o time EngePol (30 min), **incluindo secao 7**.
-2. Executar Fase 0 no venv local (comandos no README SSOI).
-3. Abrir issue/PR no BibMon referenciando este documento.
-4. Definir limiar de metricas e metadados para promocao de bundle (Fase 2).
-5. Definir o canal de distribuicao do wheel SSOI conforme o processo da BibMon.
-6. Definir D11 e a retencao das previsoes do `continuous_shadow`.
-7. Na Fase 3, implementar `OutageDetector`, `SSOIRegistry`, `WritePolicy`,
-   `MonitorInputPolicy` e `InferenceMode` antes de fechar `production.yaml`.
+1. Seguir na branch BibMon `feat/ssoi-imputer-wrapper` (sem nova branch, sem `main`).
+2. Fio detector+imputer feito; falta notebook/exemplo sintetico e limiar G2.
+3. Ensaio de metrica feito (`doc/SSOI_ENSAIO_SULFATOS.md`); falta limiar de promocao.
+4. Registrar versoes scikit-learn do bundle (1.6.1) vs venv (1.9.0) na matriz T0004.
+5. Definir limiar de metricas e canal de wheel SSOI (Fase 5) com o time.
+6. Detector ja esta no codigo; nao reimplementar. `production.yaml` so depois das politicas.
 
 ---
 
