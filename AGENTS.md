@@ -10,6 +10,18 @@ BibMon source. Canonical integration spec lives in the BibMon repo:
 - `doc/adr/`
 
 Roadmap in this repo: `doc/PLANO_INTEGRACAO_BIBMON.md`.
+Living status (flowcharts, sketches): BibMon `doc/SSOI_PLANO_VIVO.md`.
+After each implementation slice, update those two files.
+
+## Cursor chat
+
+Answer the user's questions in clear Portuguese, without jargon. Lead with
+the direct answer (yes/no, what happened). When a timeline or a decision is
+involved, add a short everyday example. Distinguish "the program worked"
+from "the plant data was incomplete". Do not assume the user memorized
+internal task IDs, file names, or spec labels.
+
+See `.cursor/rules/chat-respostas-claras.mdc`.
 
 ## Git
 
@@ -20,5 +32,8 @@ explicit user authorization for that operation and target.
 
 Do not run `git reset --hard`, `git clean -fd`, or force-push unless the user
 explicitly requests it.
+
+The Cursor agent is not a co-author. Never add
+`Co-authored-by: Cursor <cursoragent@cursor.com>` to a commit message.
 
 At the end of a task, propose commit commands; do not execute them.

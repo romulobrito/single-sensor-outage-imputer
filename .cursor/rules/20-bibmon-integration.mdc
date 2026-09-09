@@ -12,4 +12,6 @@ in BibMon.
 Do not implement SSOI as `ModeloGenerico`. Do not vendor BibMon source.
 
 Send engineering-unit auxiliaries into `VirtualSensor`; the bundle owns TCDR
-scaling. Canonical spec: BibMon `doc/SSOI_BIBMON.md`.
+scaling. Canonical spec: BibMon `doc/SSOI_BIBMON.md`. Living plan:
+BibMon `doc/SSOI_PLANO_VIVO.md` (update it when this package's contract or
+evaluation protocol changes).

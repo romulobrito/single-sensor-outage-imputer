@@ -1,0 +1,21 @@
+---
+description: Commits must not list the Cursor agent as co-author
+alwaysApply: true
+---
+
+# Commit authorship
+
+The Cursor agent is **not a co-author**. Commit identity is only the user's
+Git `user.name` / `user.email`.
+
+Never include in a `git commit` message (body, footer, or trailer):
+
+```text
+Co-authored-by: Cursor <cursoragent@cursor.com>
+```
+
+Also forbidden: any `Co-authored-by:` line naming Cursor, cursoragent,
+Cursor Agent, or an equivalent IDE identity.
+
+Do not use `--trailer`, `git interpret-trailers`, or an automatic co-author
+append. The HEREDOC ends at the commit text.
