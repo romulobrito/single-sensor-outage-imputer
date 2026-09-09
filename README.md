@@ -68,6 +68,25 @@ python examples/train_from_h5.py \
 Omit `--cpu` to use CUDA when available. `--hdf-key` is only required when the
 HDF5 file contains more than one table.
 
+To keep an auxiliary out of automatic screening even if correlation is high:
+
+```bash
+python examples/train_from_h5.py \
+  --data /path/to/data.h5 \
+  --target 1251_FIT_801C_2 \
+  --bundle-dir artifacts/bundle_target_a \
+  --exclude-features TAG_INSTAVEL \
+  --exclude-features-file plant_exclude.json
+```
+
+`--exclude-features` and the JSON file are merged. The JSON may be a list or
+`{"exclude_features": ["TAG_INSTAVEL"]}`. Screening still ranks the remaining
+columns. The banned names are stored in the bundle as `excluded_features`
+(audit only; inference uses `selected_features`).
+
+HDF5 screening tests skip unless `SSOI_H5_PATH` or `data/*.h5` exists. They
+do not train a full TCDR and do not print process values.
+
 This runs blocked chronological split with adaptive head-skip, train-only
 feature screening, mask-weighted TCDR training, bundle export, and held-out
 outage-mode metrics via `VirtualSensor.predict`.

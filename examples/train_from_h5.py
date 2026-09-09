@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from ssoi.train import train_from_h5  # noqa: E402
+from ssoi.train import load_exclude_features_file, train_from_h5  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -51,6 +51,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-missing-pct", type=float, default=30.0)
     p.add_argument("--max-features", type=int, default=10)
     p.add_argument("--min-features", type=int, default=3)
+    p.add_argument(
+        "--exclude-features",
+        nargs="*",
+        default=None,
+        help="Auxiliary tags that must not enter automatic screening",
+    )
+    p.add_argument(
+        "--exclude-features-file",
+        default=None,
+        help="JSON list or object with key exclude_features",
+    )
     p.add_argument("--time-test-size", type=float, default=0.05)
     p.add_argument("--time-val-size", type=float, default=0.1)
     p.add_argument("--min-target-coverage", type=float, default=0.2)
@@ -69,6 +80,12 @@ def main(argv: list[str] | None = None) -> int:
     """Run training and print a compact JSON summary."""
     args = build_parser().parse_args(argv)
     device = "cpu" if args.cpu else None
+    excluded: list[str] = []
+    if args.exclude_features_file:
+        excluded.extend(load_exclude_features_file(args.exclude_features_file))
+    if args.exclude_features:
+        excluded.extend(args.exclude_features)
+    exclude_arg = excluded if excluded else None
     result = train_from_h5(
         data_path=args.data,
         target=args.target,
@@ -86,6 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         max_missing_pct=args.max_missing_pct,
         max_features=args.max_features,
         min_features=args.min_features,
+        exclude_features=exclude_arg,
         test_size=args.time_test_size,
         val_size=args.time_val_size,
         min_target_coverage=args.min_target_coverage,

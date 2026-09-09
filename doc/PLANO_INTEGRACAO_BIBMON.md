@@ -22,6 +22,7 @@ ser atualizado a cada implementacao.
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
+| Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
 | Status           | Fase 1-3 minima no codigo (wrapper, detector, fio, reliability por tag) |
 
 ---
@@ -1176,6 +1177,8 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 4. Registrar versoes scikit-learn do bundle (1.6.1) vs venv (1.9.0) na matriz T0004.
 5. Definir limiar de metricas e canal de wheel SSOI (Fase 5) com o time.
 6. Detector ja esta no codigo; nao reimplementar. `production.yaml` so depois das politicas.
+7. Receita de treino (`exclude_features`) e cadastro de bundles:
+   BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` (Fatias A-E). Nao bloqueia T0309.
 
 ---
 

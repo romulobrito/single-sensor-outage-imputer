@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 import joblib
 import numpy as np
@@ -104,6 +104,7 @@ def save_bundle(
     model: TargetConditionalDenoisingRegressor,
     target_name: str,
     manifest: Optional[Mapping[str, Any]] = None,
+    excluded_features: Optional[Sequence[str]] = None,
 ) -> Path:
     """
     Persist a trainable/deployable bundle to disk.
@@ -113,7 +114,12 @@ def save_bundle(
     root = Path(bundle_dir)
     root.mkdir(parents=True, exist_ok=True)
 
-    feature_cfg = {"selected_features": list(features), "target": target_name}
+    excluded = [str(name) for name in (excluded_features or []) if str(name)]
+    feature_cfg = {
+        "selected_features": list(features),
+        "target": target_name,
+        "excluded_features": excluded,
+    }
     means_payload = {"means": {k: float(v) for k, v in train_feature_means.items()}}
     model_cfg = model.config_dict()
     man = {
@@ -123,9 +129,11 @@ def save_bundle(
         "n_features": len(features),
         "inference_mode": "missing_target",
         "inference_channels": {"t_tilde": 0.0, "m_t": 1.0},
+        "excluded_features": excluded,
     }
     if manifest:
         man.update(dict(manifest))
+    man["excluded_features"] = excluded
 
     _write_json(root / "feature_selection_config.json", feature_cfg)
     _write_json(root / "train_feature_means.json", means_payload)
