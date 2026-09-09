@@ -91,6 +91,11 @@ This runs blocked chronological split with adaptive head-skip, train-only
 feature screening, mask-weighted TCDR training, bundle export, and held-out
 outage-mode metrics via `VirtualSensor.predict`.
 
+Several targets at once: one process per target, started together by
+`examples/train_parallel.py` (JSON job list, `max_parallel` cap). See
+`examples/train_parallel.example.json`. Each job still needs its own
+`bundle_dir`.
+
 ## Ecosystem integration
 
 ```python

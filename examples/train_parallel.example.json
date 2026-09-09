@@ -1,0 +1,19 @@
+{
+  "data": "/path/to/sulfatos_dados_concatenados_formatados_2021.h5",
+  "hdf_key": "formatted_data_2021",
+  "max_parallel": 2,
+  "epochs": 100,
+  "cpu": true,
+  "jobs": [
+    {
+      "target": "TAG_VAZAO",
+      "bundle_dir": "artifacts/VAZAO",
+      "exclude_features": ["TAG_PRESSAO"]
+    },
+    {
+      "target": "TAG_PRESSAO",
+      "bundle_dir": "artifacts/PRESSAO",
+      "exclude_features": ["TAG_VAZAO"]
+    }
+  ]
+}
