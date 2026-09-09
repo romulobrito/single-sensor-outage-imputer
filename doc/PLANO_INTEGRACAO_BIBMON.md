@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.10                                       |
-| Data             | 2026-09-08                                 |
+| Versao do plano  | 1.11                                       |
+| Data             | 2026-09-09                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima no codigo (wrapper, detector, fio, reliability por tag) |
+| Status           | Fase 1-3 minima + T0309 (PreProcess na efetiva); wrapper, detector, fio, reliability |
 
 ---
 
