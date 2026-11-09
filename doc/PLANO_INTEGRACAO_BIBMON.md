@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.11                                       |
-| Data             | 2026-09-09                                 |
+| Versao do plano  | 1.12                                       |
+| Data             | 2026-10-20                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima + T0309 (PreProcess na efetiva); wrapper, detector, fio, reliability |
+| Status           | Fase 1-3 minima + T0309 (PreProcess na efetiva) + T0308 (sombra isolada); wrapper, detector, fio, reliability |
 
 ---
 
@@ -1178,7 +1178,9 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 5. Definir limiar de metricas e canal de wheel SSOI (Fase 5) com o time.
 6. Detector ja esta no codigo; nao reimplementar. `production.yaml` so depois das politicas.
 7. Receita de treino (`exclude_features`) e cadastro de bundles:
-   BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` (Fatias A-E). Nao bloqueia T0309.
+   BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` (Fatias A-E).
+8. T0308 feito: sombra continua isolada do preparo oficial. Proximo passo
+   de codigo: T0310 (comportamento do alarme / familias de modelo).
 
 ---
 
