@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.15                                       |
+| Versao do plano  | 1.16                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima + T0309 + T0308 + T0310 + alarme PCA + ciclo T0311; wrapper, detector, fio, reliability |
+| Status           | Fase 1-3 minima ate T0312 (trava da coluna e Gate G3 automatico); wrapper, detector, fio, reliability |
 
 ---
 
@@ -1185,8 +1185,11 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 10. Divergencia do alarme de reconstrucao feita (PCA, mesmo limite do
     treino, baldes observado e estimado).
 11. T0311 feito: ciclo espera, queda confirmada e volta no fio oficial,
-    com duas tags independentes. Proximo passo de codigo: T0312
-    (trava da sombra e Gate G3). YAML do cadastro continua na T0402.
+    com duas tags independentes.
+12. T0312 feito: trava da coluna do instrumento ganha da escrita por
+    substituicao. Gate G3 automatico listado no plano vivo da BibMon.
+    Proximo passo de codigo: T0402 (cadastro YAML). Aprovacao humana
+    de operacao continua no Gate G6.
 
 ---
 
