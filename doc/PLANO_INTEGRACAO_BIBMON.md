@@ -16,7 +16,7 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.19                                       |
+| Versao do plano  | 1.20                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
@@ -1194,8 +1194,8 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
     na CPU se o PyTorch nao enxergar CUDA.
 14. T0402 feito: a BibMon le o YAML de operacao, registra so as tags ligadas
     e monta um detector por tag. Exemplo versionado com comentarios. A copia
-    da planta fica fora do Git. O que falta da fatia C e a recusa de apagar
-    no script de um alvo. O apontador `current` continua na fatia E.
+    da planta fica fora do Git. O script de um alvo recusa pasta com
+    manifesto. O proximo codigo e a Fatia E, o apontador `current`.
     Aprovacao humana de operacao continua no Gate G6.
 
 ---

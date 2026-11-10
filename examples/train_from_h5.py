@@ -73,6 +73,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="HDF5 table/group name when the file contains more than one table",
     )
     p.add_argument("--cpu", action="store_true", help="Force CPU even if CUDA exists")
+    p.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace a folder that already has manifest.json. Default refuses.",
+    )
     return p
 
 
@@ -111,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
         max_skip_head_frac=args.max_skip_head_frac,
         hdf_key=args.hdf_key,
         device=device,
+        overwrite=args.overwrite,
     )
     summary = {
         "bundle_dir": str(result.bundle_dir),

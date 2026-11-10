@@ -505,6 +505,22 @@ def _train_model(
     return history
 
 
+def recusar_pasta_ocupada(bundle_dir: PathLike, overwrite: bool = False) -> None:
+    """
+    Stop when the output folder already holds a manifest.
+
+    The folder is left as it is. ``overwrite=True`` is the laboratory escape.
+    """
+    if not isinstance(overwrite, bool):
+        raise TypeError("overwrite must be a bool")
+    pasta = Path(bundle_dir)
+    if (pasta / "manifest.json").is_file() and not overwrite:
+        raise FileExistsError(
+            "bundle dir already has a manifest; refusing to overwrite: "
+            f"{pasta}"
+        )
+
+
 def train_from_dataframe(
     df: pd.DataFrame,
     target: str,
@@ -530,10 +546,12 @@ def train_from_dataframe(
     p_mask: float = 0.5,
     masked_weight: float = 1.0,
     device: Optional[str] = None,
+    overwrite: bool = False,
 ) -> TrainResult:
     """
     Full leakage-safe train pipeline ending in a deployable SSOI bundle.
     """
+    recusar_pasta_ocupada(bundle_dir, overwrite=overwrite)
     set_seed(seed)
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -698,17 +716,29 @@ def train_from_h5(
     target: str,
     bundle_dir: PathLike,
     hdf_key: Optional[str] = None,
+    overwrite: bool = False,
     **kwargs: Any,
 ) -> TrainResult:
     """
     Load a table from disk and run train_from_dataframe.
+
+    The occupied-folder check runs before the table is read.
 
     Parameters
     ----------
     hdf_key :
         Optional HDF5 table/group name. Must not be forwarded to
         ``train_from_dataframe``.
+    overwrite :
+        When false, a folder that already has ``manifest.json`` stops the run.
     """
+    recusar_pasta_ocupada(bundle_dir, overwrite=overwrite)
     df = load_table(data_path, hdf_key=hdf_key)
     print(f"Loaded {data_path}: shape={df.shape}")
-    return train_from_dataframe(df, target=target, bundle_dir=bundle_dir, **kwargs)
+    return train_from_dataframe(
+        df,
+        target=target,
+        bundle_dir=bundle_dir,
+        overwrite=overwrite,
+        **kwargs,
+    )
