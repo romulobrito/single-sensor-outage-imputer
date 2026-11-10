@@ -16,7 +16,7 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.16                                       |
+| Versao do plano  | 1.17                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
@@ -1188,8 +1188,12 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
     com duas tags independentes.
 12. T0312 feito: trava da coluna do instrumento ganha da escrita por
     substituicao. Gate G3 automatico listado no plano vivo da BibMon.
-    Proximo passo de codigo: T0402 (cadastro YAML). Aprovacao humana
-    de operacao continua no Gate G6.
+    Proximo passo de codigo na BibMon: T0402 (cadastro YAML). Aprovacao
+    humana de operacao continua no Gate G6.
+13. Decidido, ainda sem codigo: Fatia F, um YAML comentado de treino no
+    SSOI, no mesmo nivel de detalhe do cadastro. Fluxograma em texto, todas
+    as opcoes do script e dois alvos. O JSON atual continua valido. O treino
+    nao le o YAML da planta.
 
 ---
 
