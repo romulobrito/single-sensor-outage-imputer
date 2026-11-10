@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.20                                       |
+| Versao do plano  | 1.21                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima ate T0402; fatia F (YAML de treino e pasta vN) |
+| Status           | Fase 1-3 minima ate T0402; fatia F (YAML de treino e pasta vN); marca current |
 
 ---
 
@@ -1195,8 +1195,9 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 14. T0402 feito: a BibMon le o YAML de operacao, registra so as tags ligadas
     e monta um detector por tag. Exemplo versionado com comentarios. A copia
     da planta fica fora do Git. O script de um alvo recusa pasta com
-    manifesto. O proximo codigo e a Fatia E, o apontador `current`.
-    Aprovacao humana de operacao continua no Gate G6.
+    manifesto. A marca `current` existe e so uma pessoa a move.
+    A proxima etapa desta lista nao e codigo: publicar continua
+    decisao humana (Gate G6).
 
 ---
 
