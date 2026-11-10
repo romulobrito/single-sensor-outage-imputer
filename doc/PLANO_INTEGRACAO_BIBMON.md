@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.17                                       |
+| Versao do plano  | 1.19                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima ate T0312 (trava da coluna e Gate G3 automatico); wrapper, detector, fio, reliability |
+| Status           | Fase 1-3 minima ate T0402; fatia F (YAML de treino e pasta vN) |
 
 ---
 
@@ -1188,12 +1188,15 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
     com duas tags independentes.
 12. T0312 feito: trava da coluna do instrumento ganha da escrita por
     substituicao. Gate G3 automatico listado no plano vivo da BibMon.
-    Proximo passo de codigo na BibMon: T0402 (cadastro YAML). Aprovacao
-    humana de operacao continua no Gate G6.
-13. Decidido, ainda sem codigo: Fatia F, um YAML comentado de treino no
-    SSOI, no mesmo nivel de detalhe do cadastro. Fluxograma em texto, todas
-    as opcoes do script e dois alvos. O JSON atual continua valido. O treino
-    nao le o YAML da planta.
+13. Fatia F feita: `ssoi/train_jobs.py` le o YAML comentado de treino,
+    escolhe `vN` por alvo e dispara um processo por alvo. O JSON continua
+    valido. O treino nao le o YAML da planta. `cpu: false` pede GPU e cai
+    na CPU se o PyTorch nao enxergar CUDA.
+14. T0402 feito: a BibMon le o YAML de operacao, registra so as tags ligadas
+    e monta um detector por tag. Exemplo versionado com comentarios. A copia
+    da planta fica fora do Git. O que falta da fatia C e a recusa de apagar
+    no script de um alvo. O apontador `current` continua na fatia E.
+    Aprovacao humana de operacao continua no Gate G6.
 
 ---
 

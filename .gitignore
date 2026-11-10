@@ -33,3 +33,6 @@ dist/
 outputs/
 artifacts/
 data/
+
+# Machine copy of the training YAML. The example stays tracked.
+examples/train_parallel.yaml

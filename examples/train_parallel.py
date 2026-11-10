@@ -8,8 +8,13 @@ The training code is unchanged: this script only starts N copies of
 Example::
 
     python examples/train_parallel.py --config jobs.json
+    python examples/train_parallel.py --config examples/train_parallel.example.yaml
 
-The JSON is not committed with industrial paths. Shape::
+``.json`` stays valid. ``.yaml`` and ``.yml`` are the commented file.
+The machine copy ``examples/train_parallel.yaml`` stays out of Git.
+Each job ``bundle_dir`` is a root; the launcher appends ``v1``, then ``v2``.
+
+The JSON shape is::
 
     {
       "data": "/path/to/file.h5",
@@ -57,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--config",
         required=True,
-        help="JSON with data path and jobs (not an industrial dump)",
+        help="JSON or YAML with data path and jobs (not an industrial dump)",
     )
     args = parser.parse_args(argv)
     payload = load_jobs_config(args.config)
