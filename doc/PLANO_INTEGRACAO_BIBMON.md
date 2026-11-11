@@ -16,14 +16,14 @@ ser atualizado a cada implementacao.
 
 | Campo            | Valor                                      |
 |------------------|--------------------------------------------|
-| Versao do plano  | 1.22                                       |
+| Versao do plano  | 1.23                                       |
 | Data             | 2026-11-10                                 |
 | Repo SSOI        | single-sensor-outage-imputer               |
 | Repo BibMon      | Grupo-EngePol/BibMon (branch `migration`)  |
 | Spec canonica    | BibMon `doc/SSOI_BIBMON.md`                 |
 | Andamento vivo   | BibMon `doc/SSOI_PLANO_VIVO.md`             |
 | Treino/cadastro  | BibMon `doc/SSOI_PLANO_TREINO_E_CADASTRO.md` |
-| Status           | Fase 1-3 minima ate T0402; fatia F; marca current; Gate G0 segue |
+| Status           | Fase 1-3 minima ate T0402; fatia F; marca current; Gate G0 segue; wheel SSOI 0.1.0 |
 
 ---
 
@@ -1174,7 +1174,7 @@ R = Responsavel | A = Aprovador | C = Consultado | I = Informado
 1. Seguir na branch BibMon `feat/ssoi-imputer-wrapper` (sem nova branch, sem `main`).
 2. Fio detector+imputer feito; falta notebook/exemplo sintetico e limiar G2.
 3. Ensaio de metrica feito (`doc/SSOI_ENSAIO_SULFATOS.md`); falta limiar de promocao.
-4. Matriz T0004 registrada: o scaler 1.6.1 abre no scikit-learn 1.9.0 com aviso. Decisao G0: seguir.
+4. Matriz T0004 registrada: o scaler 1.6.1 abre no scikit-learn 1.9.0 com aviso. Decisao G0: seguir. O pacote SSOI 0.1.0 e o extra da BibMon; o modelo treinado nao vai nele, e a BibMon nao foi publicada.
 5. Definir limiar de metricas e canal de wheel SSOI (Fase 5) com o time.
 6. Detector ja esta no codigo; nao reimplementar. `production.yaml` so depois das politicas.
 7. Receita de treino (`exclude_features`) e cadastro de bundles:
