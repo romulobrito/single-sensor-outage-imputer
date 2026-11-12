@@ -1,0 +1,18 @@
+---
+description: Answer in Cursor chat clearly, in Portuguese, without jargon
+alwaysApply: true
+---
+
+# Cursor chat answers
+
+When answering the user:
+
+- Lead with a direct answer (yes/no, it worked or it did not).
+- Use simple Portuguese. Avoid jargon; if a technical term is required,
+  explain it the first time with an everyday analogy.
+- When the idea is a timeline or a decision, add a short example
+  (traffic light, measurement notebook, a frozen gauge).
+- Separate what the program did from what was already missing in the data.
+- Do not recycle task IDs, spec names, or internal paths as if the user
+  already memorized them.
+- Put details after the main idea.

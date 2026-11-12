@@ -1,0 +1,91 @@
+# Treino de varios alvos. Nao e o YAML de operacao da BibMon.
+# Linhas com # sao explicacao. O programa nao as le.
+# Copie para examples/train_parallel.yaml, fora do Git, e troque o caminho.
+#
+# Como um treino anda
+#
+#   dados locais
+#        |
+#        v
+#   um processo por alvo
+#        |
+#        +--> TAG_VAZAO   -> artifacts/VAZAO/v1
+#        +--> TAG_PRESSAO -> artifacts/PRESSAO/v1
+#
+# A pasta escrita no alvo e a raiz. O leitor escolhe v1, e no treino
+# seguinte v2, se v1 ja tiver manifesto. Nao apaga a versao anterior.
+# Os pesos ficam fora do Git.
+
+# Arquivo local. Nao vai para o Git.
+data: /caminho/local/dados.h5
+
+# Nome da tabela dentro do HDF5. Apague a linha se o arquivo tiver uma so.
+hdf_key: formatted_data_2021
+
+# Teto de processos ao mesmo tempo. Um processo por alvo.
+# Com uma placa de 4 GB, use 1 para os treinos nao dividirem a GPU.
+max_parallel: 2
+
+# true: forca a CPU (--cpu).
+# false: pede a GPU. Se o PyTorch nao enxergar CUDA, o treino fica na CPU.
+cpu: true
+
+# Passos maximos. Menos passos termina antes; pode parar cedo pela paciencia.
+epochs: 100
+
+# Passos sem melhora ate parar, antes de epochs.
+patience: 20
+
+# Semente da divisao e dos pesos iniciais.
+seed: 42
+
+# Linhas por passo. Menor cabe em menos memoria.
+batch_size: 256
+
+# Passo do otimizador. Maior anda mais rapido e pode oscilar.
+lr: 0.001
+
+# Tamanho do gargalo da rede.
+latent_dim: 16
+
+# Fracao de neuronios desligados no treino.
+dropout: 0.2
+
+# Chance de mascarar a entrada do alvo durante o treino.
+p_mask: 0.5
+
+# Peso do erro nas posicoes mascaradas.
+masked_weight: 1.0
+
+# Correlacao minima para um auxiliar entrar na peneira.
+min_correlation: 0.3
+
+# Percentual maximo de vazios de um auxiliar para ele continuar na peneira.
+max_missing_pct: 30.0
+
+# Teto e piso de auxiliares escolhidos.
+max_features: 10
+min_features: 3
+
+# Fracao final da serie usada como teste e como validacao.
+time_test_size: 0.05
+time_val_size: 0.1
+
+# Cobertura minima do alvo, e quantidade minima de numeros, para treinar.
+min_target_coverage: 0.2
+min_target_count: 10000
+
+# Quanto do inicio pode ser pulado ate achar um trecho treinavel.
+max_skip_head_frac: 0.95
+
+# Um alvo, uma raiz. A lista e o que nao entra na peneira.
+# Ela substitui --exclude-features-file.
+jobs:
+  - target: TAG_VAZAO
+    bundle_dir: artifacts/VAZAO
+    exclude_features:
+      - TAG_PRESSAO
+  - target: TAG_PRESSAO
+    bundle_dir: artifacts/PRESSAO
+    exclude_features:
+      - TAG_VAZAO

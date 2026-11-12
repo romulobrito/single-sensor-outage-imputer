@@ -1,0 +1,16 @@
+---
+description: Keep SSOI roadmap aligned with BibMon living integration plan
+alwaysApply: true
+---
+
+# Integration plan updates
+
+When SSOI work changes the BibMon integration (wrapper contract, bundle,
+training protocol, evaluation), update in the same cycle:
+
+- BibMon `doc/SSOI_PLANO_VIVO.md` (canonical living plan: flowchart, API
+  sketch, event-by-event logic, remaining work)
+- this repo `doc/PLANO_INTEGRACAO_BIBMON.md` (phase status)
+
+Do not commit industrial HDF5 or real bundles. Canonical spec remains
+BibMon `doc/SSOI_BIBMON.md`.

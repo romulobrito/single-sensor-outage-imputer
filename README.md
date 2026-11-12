@@ -29,9 +29,39 @@ in a separate lab repo.
 
 ## Install
 
+The published package is `single-sensor-outage-imputer` 0.1.0 on PyPI.
+It contains the code only. Trained weights and plant files stay in a
+folder outside the package.
+
+BibMon is not on PyPI. Its integration code is on branch
+`feat/ssoi-imputer-wrapper` until the pull request is accepted onto
+`main`. After that, check out `main` instead of the feature branch.
+Python 3.11 or newer. Install the CPU PyTorch wheel first so pip does
+not pull the CUDA build:
+
+```bash
+git clone https://github.com/Grupo-EngePol/BibMon.git
+cd BibMon
+git checkout feat/ssoi-imputer-wrapper
+python -m venv .venv
+source .venv/bin/activate
+pip install "torch==2.14.0+cpu" --index-url https://download.pytorch.org/whl/cpu
+pip install -e ".[ssoi]"
+```
+
+`import bibmon` works without the extra. Creating `SSOIImputer` without
+the SSOI package raises `ImportError`. Training stays in this package.
+Inside BibMon, the extra is what opens a bundle, follows `current`, and
+fills the effective table.
+
+To work on this repository itself, the source is on branch
+`docs/point-to-bibmon-spec` until that pull request is accepted onto
+`main`:
+
 ```bash
 git clone https://github.com/romulobrito/single-sensor-outage-imputer.git
 cd single-sensor-outage-imputer
+git checkout docs/point-to-bibmon-spec
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -68,9 +98,33 @@ python examples/train_from_h5.py \
 Omit `--cpu` to use CUDA when available. `--hdf-key` is only required when the
 HDF5 file contains more than one table.
 
+To keep an auxiliary out of automatic screening even if correlation is high:
+
+```bash
+python examples/train_from_h5.py \
+  --data /path/to/data.h5 \
+  --target 1251_FIT_801C_2 \
+  --bundle-dir artifacts/bundle_target_a \
+  --exclude-features TAG_INSTAVEL \
+  --exclude-features-file plant_exclude.json
+```
+
+`--exclude-features` and the JSON file are merged. The JSON may be a list or
+`{"exclude_features": ["TAG_INSTAVEL"]}`. Screening still ranks the remaining
+columns. The banned names are stored in the bundle as `excluded_features`
+(audit only; inference uses `selected_features`).
+
+HDF5 screening tests skip unless `SSOI_H5_PATH` or `data/*.h5` exists. They
+do not train a full TCDR and do not print process values.
+
 This runs blocked chronological split with adaptive head-skip, train-only
 feature screening, mask-weighted TCDR training, bundle export, and held-out
 outage-mode metrics via `VirtualSensor.predict`.
+
+Several targets at once: one process per target, started together by
+`examples/train_parallel.py` (JSON job list, `max_parallel` cap). See
+`examples/train_parallel.example.json`. Each job still needs its own
+`bundle_dir`.
 
 ## Ecosystem integration
 

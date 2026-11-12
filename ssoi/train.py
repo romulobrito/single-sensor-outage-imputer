@@ -237,6 +237,71 @@ def blocked_split_with_skip(
     return train_pos, val_pos, test_pos, float(start_frac)
 
 
+def load_exclude_features_file(path: PathLike) -> List[str]:
+    """
+    Read a JSON list of tag names that must not enter feature screening.
+
+    Accepts a JSON array or an object with key ``exclude_features``.
+    """
+    raw_path = Path(path)
+    if not raw_path.is_file():
+        raise FileNotFoundError(f"exclude-features file not found: {raw_path}")
+    payload = json.loads(raw_path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        items = payload
+    elif isinstance(payload, dict) and "exclude_features" in payload:
+        items = payload["exclude_features"]
+    else:
+        raise ValueError(
+            "exclude-features file must be a JSON list or "
+            "an object with key 'exclude_features'"
+        )
+    if not isinstance(items, list):
+        raise ValueError("exclude_features must be a list of strings")
+    names: List[str] = []
+    seen = set()
+    for item in items:
+        name = str(item)
+        if not name or name in seen:
+            continue
+        names.append(name)
+        seen.add(name)
+    return names
+
+
+def normalize_exclude_features(
+    df: pd.DataFrame,
+    target: str,
+    exclude_features: Optional[Sequence[str]] = None,
+) -> List[str]:
+    """
+    Validate and deduplicate the restriction list against ``df`` columns.
+
+    Raises
+    ------
+    ValueError
+        If a name is missing from ``df`` or equals ``target``.
+    """
+    if exclude_features is None:
+        return []
+    names: List[str] = []
+    seen = set()
+    for raw in exclude_features:
+        name = str(raw)
+        if not name or name in seen:
+            continue
+        names.append(name)
+        seen.add(name)
+    missing = [name for name in names if name not in df.columns]
+    if missing:
+        raise ValueError(
+            f"Unknown exclude_features not in columns: {missing}"
+        )
+    if target in seen:
+        raise ValueError("exclude_features must not contain the target")
+    return names
+
+
 def select_features_train_only(
     df_train: pd.DataFrame,
     target: str,
@@ -244,18 +309,23 @@ def select_features_train_only(
     max_missing_pct: float = 30.0,
     min_features: int = 3,
     max_features: int = 10,
+    exclude_features: Optional[Sequence[str]] = None,
 ) -> List[str]:
     """
     Screen numeric auxiliaries on the training fold only.
 
     Ranking score = |corr| * completeness_fraction.
+    Names in ``exclude_features`` never enter the ranking.
     """
     if target not in df_train.columns:
         raise KeyError(f"Target '{target}' not in training columns")
+    blocked = set(
+        normalize_exclude_features(df_train, target, exclude_features)
+    )
     y = coerce_numeric_series(df_train[target])
     candidates: List[Tuple[str, float, float, float]] = []
     for col in df_train.columns:
-        if col == target:
+        if col == target or col in blocked:
             continue
         series = coerce_numeric_series(df_train[col])
         if series.notna().sum() < 10:
@@ -435,6 +505,22 @@ def _train_model(
     return history
 
 
+def recusar_pasta_ocupada(bundle_dir: PathLike, overwrite: bool = False) -> None:
+    """
+    Stop when the output folder already holds a manifest.
+
+    The folder is left as it is. ``overwrite=True`` is the laboratory escape.
+    """
+    if not isinstance(overwrite, bool):
+        raise TypeError("overwrite must be a bool")
+    pasta = Path(bundle_dir)
+    if (pasta / "manifest.json").is_file() and not overwrite:
+        raise FileExistsError(
+            "bundle dir already has a manifest; refusing to overwrite: "
+            f"{pasta}"
+        )
+
+
 def train_from_dataframe(
     df: pd.DataFrame,
     target: str,
@@ -445,6 +531,7 @@ def train_from_dataframe(
     max_missing_pct: float = 30.0,
     min_features: int = 3,
     max_features: int = 10,
+    exclude_features: Optional[Sequence[str]] = None,
     test_size: float = 0.05,
     val_size: float = 0.1,
     min_target_coverage: float = 0.2,
@@ -459,10 +546,12 @@ def train_from_dataframe(
     p_mask: float = 0.5,
     masked_weight: float = 1.0,
     device: Optional[str] = None,
+    overwrite: bool = False,
 ) -> TrainResult:
     """
     Full leakage-safe train pipeline ending in a deployable SSOI bundle.
     """
+    recusar_pasta_ocupada(bundle_dir, overwrite=overwrite)
     set_seed(seed)
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -483,6 +572,7 @@ def train_from_dataframe(
     )
     print(f"Head skip fraction used: {skip_frac:.3f}")
 
+    excluded = normalize_exclude_features(work, target, exclude_features)
     features = select_features_train_only(
         work.iloc[train_pos],
         target=target,
@@ -490,6 +580,7 @@ def train_from_dataframe(
         max_missing_pct=max_missing_pct,
         min_features=min_features,
         max_features=max_features,
+        exclude_features=excluded,
     )
     print(f"Selected {len(features)} features: {features}")
 
@@ -560,6 +651,7 @@ def train_from_dataframe(
         scaler_y=scaler_y,
         model=model,
         target_name=target,
+        excluded_features=excluded,
         manifest={
             "seed": int(seed),
             "skip_frac": float(skip_frac),
@@ -624,17 +716,29 @@ def train_from_h5(
     target: str,
     bundle_dir: PathLike,
     hdf_key: Optional[str] = None,
+    overwrite: bool = False,
     **kwargs: Any,
 ) -> TrainResult:
     """
     Load a table from disk and run train_from_dataframe.
+
+    The occupied-folder check runs before the table is read.
 
     Parameters
     ----------
     hdf_key :
         Optional HDF5 table/group name. Must not be forwarded to
         ``train_from_dataframe``.
+    overwrite :
+        When false, a folder that already has ``manifest.json`` stops the run.
     """
+    recusar_pasta_ocupada(bundle_dir, overwrite=overwrite)
     df = load_table(data_path, hdf_key=hdf_key)
     print(f"Loaded {data_path}: shape={df.shape}")
-    return train_from_dataframe(df, target=target, bundle_dir=bundle_dir, **kwargs)
+    return train_from_dataframe(
+        df,
+        target=target,
+        bundle_dir=bundle_dir,
+        overwrite=overwrite,
+        **kwargs,
+    )
