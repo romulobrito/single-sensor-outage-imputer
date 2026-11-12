@@ -29,9 +29,39 @@ in a separate lab repo.
 
 ## Install
 
+The published package is `single-sensor-outage-imputer` 0.1.0 on PyPI.
+It contains the code only. Trained weights and plant files stay in a
+folder outside the package.
+
+BibMon is not on PyPI. Its integration code is on branch
+`feat/ssoi-imputer-wrapper` until the pull request is accepted onto
+`main`. After that, check out `main` instead of the feature branch.
+Python 3.11 or newer. Install the CPU PyTorch wheel first so pip does
+not pull the CUDA build:
+
+```bash
+git clone https://github.com/Grupo-EngePol/BibMon.git
+cd BibMon
+git checkout feat/ssoi-imputer-wrapper
+python -m venv .venv
+source .venv/bin/activate
+pip install "torch==2.14.0+cpu" --index-url https://download.pytorch.org/whl/cpu
+pip install -e ".[ssoi]"
+```
+
+`import bibmon` works without the extra. Creating `SSOIImputer` without
+the SSOI package raises `ImportError`. Training stays in this package.
+Inside BibMon, the extra is what opens a bundle, follows `current`, and
+fills the effective table.
+
+To work on this repository itself, the source is on branch
+`docs/point-to-bibmon-spec` until that pull request is accepted onto
+`main`:
+
 ```bash
 git clone https://github.com/romulobrito/single-sensor-outage-imputer.git
 cd single-sensor-outage-imputer
+git checkout docs/point-to-bibmon-spec
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
